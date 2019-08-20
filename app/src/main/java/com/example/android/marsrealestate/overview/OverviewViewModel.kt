@@ -21,22 +21,28 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.android.marsrealestate.network.MarsApi
-import com.example.android.marsrealestate.network.MarsProperty
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import java.lang.Exception
 
 /**
  * The [ViewModel] that is attached to the [OverviewFragment].
  */
 class OverviewViewModel : ViewModel() {
 
-    // The internal MutableLiveData String that stores the status of the most recent request
+    // The internal MutableLiveData String that stores the most recent response
     private val _response = MutableLiveData<String>()
 
-    // The external immutable LiveData for the request status String
+    // The external immutable LiveData for the response String
     val response: LiveData<String>
         get() = _response
+
+    // In order to use our deferred (and hence coroutines) we create a Job
+    private var viewModelJob = Job()
+    // This job runs on the main (UI) thread
+    private val coroutineScope = CoroutineScope(viewModelJob + Dispatchers.Main)
 
     /**
      * Call getMarsRealEstateProperties() on init so we can display status immediately.
@@ -49,27 +55,23 @@ class OverviewViewModel : ViewModel() {
      * Sets the value of the status LiveData to the Mars API status.
      */
     private fun getMarsRealEstateProperties() {
-        MarsApi.retrofitService.getProperties().enqueue(object: Callback<List<MarsProperty>> {
-            /**
-             * Invoked when a network exception occurred talking to the server or when an unexpected
-             * exception occurred creating the request or processing the response.
-             */
-            override fun onFailure(call: Call<List<MarsProperty>>, t: Throwable) {
-                _response.value = "Failure" + t.message
+        //We must be inside our co-routine scope in order to use our Deferred
+        coroutineScope.launch {
+            //While code is still being executed on the main thread, coroutines manage concurrency
+            var getPropertiesDeferred = MarsApi.retrofitService.getProperties()
+            try{
+                var listResult = getPropertiesDeferred.await()
+                _response.value = "Success: ${listResult.size} Mars properties retrieved"
+            }catch (e:Exception){
+//              Invoked when a network exception occurred talking to the server or when an unexpected
+//              exception occurred creating the request or processing the response
+                _response.value = "Failure" + e.message
             }
+        }
+    }
 
-            /**
-             * Invoked for a received HTTP response.
-             *
-             *
-             * Note: An HTTP response may still indicate an application-level failure such as a 404 or 500.
-             * Call [Response.isSuccessful] to determine if the response indicates success.
-             */
-            override fun onResponse(call: Call<List<MarsProperty>>, response: Response<List<MarsProperty>>) {
-                _response.value = "Success: ${response.body()?.size} Mars properties retrieved"
-            }
-
-        })
-        _response.value = "Set the Mars API Response here!"
+    override fun onCleared() {
+        super.onCleared()
+        viewModelJob.cancel()
     }
 }
