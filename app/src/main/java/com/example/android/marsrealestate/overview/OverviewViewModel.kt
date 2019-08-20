@@ -21,6 +21,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.android.marsrealestate.network.MarsApi
+import com.example.android.marsrealestate.network.MarsProperty
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -33,11 +34,18 @@ import java.lang.Exception
 class OverviewViewModel : ViewModel() {
 
     // The internal MutableLiveData String that stores the most recent response
-    private val _response = MutableLiveData<String>()
+    //considering response data mainly contains response status it was refactored for clarity
+    private val _status = MutableLiveData<String>()
 
     // The external immutable LiveData for the response String
     val response: LiveData<String>
-        get() = _response
+        get() = _status
+
+    // Actual property information
+    private val _property = MutableLiveData<MarsProperty>()
+
+    val property: LiveData<MarsProperty>
+        get() = _property
 
     // In order to use our deferred (and hence coroutines) we create a Job
     private var viewModelJob = Job()
@@ -61,11 +69,14 @@ class OverviewViewModel : ViewModel() {
             var getPropertiesDeferred = MarsApi.retrofitService.getProperties()
             try{
                 var listResult = getPropertiesDeferred.await()
-                _response.value = "Success: ${listResult.size} Mars properties retrieved"
+                if(listResult.size > 0 ) {
+                    _property.value = listResult[0]
+                    _status.value = "Success: ${listResult.size} Mars properties retrieved"
+                }
             }catch (e:Exception){
 //              Invoked when a network exception occurred talking to the server or when an unexpected
 //              exception occurred creating the request or processing the response
-                _response.value = "Failure" + e.message
+                _status.value = "Failure" + e.message
             }
         }
     }
