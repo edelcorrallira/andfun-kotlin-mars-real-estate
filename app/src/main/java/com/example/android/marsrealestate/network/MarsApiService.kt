@@ -46,7 +46,7 @@ private val retrofit = Retrofit.Builder()
 /**
  * Defines the API Retrofit will create
  */
-interface MarsApiService{
+interface MarsApiService {
     /**
      * Retrieve property items, the annotation allows Retrofit to build the functionality
      */
@@ -59,7 +59,7 @@ interface MarsApiService{
 //Since Retrofit services are expensive and we only use one in this app, we expose it to the whole
 // app
 object MarsApi {
-    val retrofitService: MarsApiService by lazy {
+    val retrofitService : MarsApiService by lazy {
         retrofit.create(MarsApiService::class.java)
     }
 }

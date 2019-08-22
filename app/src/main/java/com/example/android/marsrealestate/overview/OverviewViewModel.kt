@@ -38,19 +38,19 @@ class OverviewViewModel : ViewModel() {
     private val _status = MutableLiveData<String>()
 
     // The external immutable LiveData for the response String
-    val response: LiveData<String>
+    val status: LiveData<String>
         get() = _status
 
     // Actual property information
-    private val _property = MutableLiveData<MarsProperty>()
+    private val _properties = MutableLiveData<List<MarsProperty>>()
 
-    val property: LiveData<MarsProperty>
-        get() = _property
+    val properties: LiveData<List<MarsProperty>>
+        get() = _properties
 
     // In order to use our deferred (and hence coroutines) we create a Job
     private var viewModelJob = Job()
     // This job runs on the main (UI) thread
-    private val coroutineScope = CoroutineScope(viewModelJob + Dispatchers.Main)
+    private val coroutineScope = CoroutineScope(viewModelJob + Dispatchers.Main )
 
     /**
      * Call getMarsRealEstateProperties() on init so we can display status immediately.
@@ -67,20 +67,21 @@ class OverviewViewModel : ViewModel() {
         coroutineScope.launch {
             //While code is still being executed on the main thread, coroutines manage concurrency
             var getPropertiesDeferred = MarsApi.retrofitService.getProperties()
-            try{
-                var listResult = getPropertiesDeferred.await()
-                if(listResult.size > 0 ) {
-                    _property.value = listResult[0]
-                    _status.value = "Success: ${listResult.size} Mars properties retrieved"
-                }
-            }catch (e:Exception){
+            try {
+                val listResult = getPropertiesDeferred.await()
+                _status.value = "Success: ${listResult.size} Mars properties retrieved"
+                _properties.value = listResult
+            } catch (e: Exception) {
 //              Invoked when a network exception occurred talking to the server or when an unexpected
 //              exception occurred creating the request or processing the response
-                _status.value = "Failure" + e.message
+                _status.value = "Failure: ${e.message}"
             }
         }
     }
 
+    /**
+     * This method is canceling any unfinished Jobs when the ViewModel is dismissed.
+     */
     override fun onCleared() {
         super.onCleared()
         viewModelJob.cancel()
