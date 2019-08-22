@@ -29,16 +29,24 @@ import kotlinx.coroutines.launch
 import java.lang.Exception
 
 /**
+ * Enum that is used to represent Network state.
+ * Loading - When the data is still loading
+ * Done - Successfully downloaded images, ready for display.
+ * Error - A network error has prevented us from loading the images.
+ */
+enum class MarsApiStatus { LOADING, DONE, ERROR }
+
+/**
  * The [ViewModel] that is attached to the [OverviewFragment].
  */
 class OverviewViewModel : ViewModel() {
 
     // The internal MutableLiveData String that stores the most recent response
     //considering response data mainly contains response status it was refactored for clarity
-    private val _status = MutableLiveData<String>()
+    private val _status = MutableLiveData<MarsApiStatus>()
 
     // The external immutable LiveData for the response String
-    val status: LiveData<String>
+    val status: LiveData<MarsApiStatus>
         get() = _status
 
     // Actual property information
@@ -68,13 +76,15 @@ class OverviewViewModel : ViewModel() {
             //While code is still being executed on the main thread, coroutines manage concurrency
             var getPropertiesDeferred = MarsApi.retrofitService.getProperties()
             try {
+                _status.value = MarsApiStatus.LOADING
                 val listResult = getPropertiesDeferred.await()
-                _status.value = "Success: ${listResult.size} Mars properties retrieved"
+                _status.value = MarsApiStatus.DONE
                 _properties.value = listResult
             } catch (e: Exception) {
 //              Invoked when a network exception occurred talking to the server or when an unexpected
 //              exception occurred creating the request or processing the response
-                _status.value = "Failure: ${e.message}"
+                _status.value = MarsApiStatus.ERROR
+                _properties.value = ArrayList()
             }
         }
     }
