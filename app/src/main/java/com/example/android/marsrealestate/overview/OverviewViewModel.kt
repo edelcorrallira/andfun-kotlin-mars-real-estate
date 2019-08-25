@@ -49,6 +49,27 @@ class OverviewViewModel : ViewModel() {
     val status: LiveData<MarsApiStatus>
         get() = _status
 
+    private val _navigateToSelectedProperty = MutableLiveData<MarsProperty>()
+
+    val navigateToSelectedProperty: LiveData<MarsProperty>
+        get() = _navigateToSelectedProperty
+
+    /**
+     * This navigation function is a setter that defines which MarsProperty object will be
+     * shown in detail.
+     * @param marsProperty Item that was clicked on.
+     */
+    fun displayPropertyDetails(marsProperty: MarsProperty){
+        _navigateToSelectedProperty.value = marsProperty
+    }
+
+    /**
+     * This navigation function clears MarsProperty object once navigation is completed.
+     */
+    fun displayPropertyDetailsComplete(){
+        _navigateToSelectedProperty.value = null
+    }
+
     // Actual property information
     private val _properties = MutableLiveData<List<MarsProperty>>()
 

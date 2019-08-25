@@ -25,14 +25,26 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.android.marsrealestate.databinding.GridViewItemBinding
 import com.example.android.marsrealestate.network.MarsProperty
 
-class PhotoGridAdapter : ListAdapter<MarsProperty, PhotoGridAdapter.MarsPropertyViewHolder>(DiffCallback) {
+/**
+ * Adapter for [MarsProperty] overview grid items. Passes click listeners to its
+ * [MarsPropertyViewHolder]s, and keeps list up to date by means of its [DiffCallback] companion
+ * object.
+ */
+class PhotoGridAdapter(val onClickListener: OnClickListener) :
+        ListAdapter<MarsProperty, PhotoGridAdapter.MarsPropertyViewHolder>(DiffCallback) {
+    /**
+     * [ViewHolder] for [MarsProperty] data in grid.
+     */
     class MarsPropertyViewHolder(private var binding: GridViewItemBinding):
+        //Base ViewHolder requires a view in it's constructor, hence we pass the binding.root
             RecyclerView.ViewHolder(binding.root) {
-    //Base ViewHolder requires a view in it's constructor, hence we pass the binding.root
+
 
         /**
          * This keeps the ViewHolders up to date, once binding is established they react to data
          * changes.
+         *
+         * @param marsProperty Data instance with martian property information.
          */
         fun bind(marsProperty: MarsProperty) {
             binding.property = marsProperty
@@ -137,5 +149,15 @@ class PhotoGridAdapter : ListAdapter<MarsProperty, PhotoGridAdapter.MarsProperty
     override fun onBindViewHolder(holder: MarsPropertyViewHolder, position: Int) {
         val marsProperty = getItem(position)
         holder.bind(marsProperty)
+        holder.itemView.setOnClickListener {
+            onClickListener.onClick(marsProperty)
+        }
+    }
+
+    /**
+     * Annotated Lambda that routes the onclick event from the Photogrid to
+     */
+    class OnClickListener(val clickListener: (marsProperty: MarsProperty) -> Unit) {
+        fun onClick(marsProperty: MarsProperty) = clickListener(marsProperty)
     }
 }
