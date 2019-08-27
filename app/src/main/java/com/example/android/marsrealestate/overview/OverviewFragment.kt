@@ -25,6 +25,7 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.fragment.findNavController
 import com.example.android.marsrealestate.R
 import com.example.android.marsrealestate.databinding.FragmentOverviewBinding
+import com.example.android.marsrealestate.network.MarsApiFilter
 
 /**
  * This fragment shows the the status of the Mars real-estate web services transaction.
@@ -66,9 +67,26 @@ class OverviewFragment : Fragment() {
 
     /**
      * Inflates the overflow menu that contains filtering options.
+     * @param menu The options menu.
+     * @param inflater The inflater.
      */
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.overflow_menu, menu)
         super.onCreateOptionsMenu(menu, inflater)
+    }
+
+    /**
+     * Sets the filtering options to rent, buy or removes so all properties are shown.
+     * @param item The options menu item that was selected.
+     * @return Whether options menu has been handled.
+     */
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        viewModel.updateFilter(
+        when(item?.itemId){
+            R.id.show_rent_menu -> MarsApiFilter.SHOW_RENTAL
+            R.id.show_buy_menu -> MarsApiFilter.SHOW_BUY
+            else -> MarsApiFilter.SHOW_ALL
+        })
+        return true
     }
 }

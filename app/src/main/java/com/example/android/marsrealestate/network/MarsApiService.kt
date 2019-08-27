@@ -24,9 +24,26 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.http.GET
 import kotlinx.coroutines.Deferred
+import retrofit2.http.Query
 
 private const val BASE_URL = "https://mars.udacity.com/"
 
+/**
+ * This enum encapsulates the property filtering options.
+ */
+enum class MarsApiFilter(val value: String) {
+    /**
+     * Used to restrict to rental properties.
+     */
+    SHOW_RENTAL("rent"),
+    /**
+     * Used to restrict to properties for sale.
+     */
+    SHOW_BUY("buy"),
+    /**
+     * Does not restrict properties.
+     */
+    SHOW_ALL("all")}
 
 //Moshi (JSON interpreter used with Retrofit)
 private val moshi = Moshi.Builder()
@@ -51,7 +68,7 @@ interface MarsApiService {
      * Retrieve property items, the annotation allows Retrofit to build the functionality
      */
     @GET("realestate")//Endpoint
-    fun getProperties():
+    fun getProperties(@Query("filter") type: String):
             //The call object is used to start the request
             Deferred<List<MarsProperty>>
 }
